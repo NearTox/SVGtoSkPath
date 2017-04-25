@@ -56,32 +56,36 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\NearTox\NearTox.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\NearTox\NearTox.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\NearTox\NearTox.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\NearTox\NearTox.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)bin\$(Configuration)-$(PlatformTarget)\</OutDir>
-    <IntDir>$(SolutionDir)obj\$(Configuration)-$(PlatformTarget)\</IntDir>
+    <OutDir>$(MyOutDir)</OutDir>
+    <IntDir>$(MyTempDir)</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)bin\$(Configuration)-$(PlatformTarget)\</OutDir>
-    <IntDir>$(SolutionDir)obj\$(Configuration)-$(PlatformTarget)\</IntDir>
+    <OutDir>$(MyOutDir)</OutDir>
+    <IntDir>$(MyTempDir)</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IntDir>$(SolutionDir)obj\$(Configuration)-$(PlatformTarget)\</IntDir>
-    <OutDir>$(SolutionDir)bin\$(Configuration)-$(PlatformTarget)\</OutDir>
+    <IntDir>$(MyTempDir)</IntDir>
+    <OutDir>$(MyOutDir)</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IntDir>$(SolutionDir)obj\$(Configuration)-$(PlatformTarget)\</IntDir>
-    <OutDir>$(SolutionDir)bin\$(Configuration)-$(PlatformTarget)\</OutDir>
+    <IntDir>$(MyTempDir)</IntDir>
+    <OutDir>$(MyOutDir)</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -89,11 +93,15 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(MyIncludeDir)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <AdditionalLibraryDirectories>$(MyLibDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(MyLibs)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -102,11 +110,15 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(MyIncludeDir)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <AdditionalLibraryDirectories>$(MyLibDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(MyLibs)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -117,11 +129,15 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <AdditionalIncludeDirectories>$(MyIncludeDir)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(MyLibDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(MyLibs)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -132,11 +148,15 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <AdditionalIncludeDirectories>$(MyIncludeDir)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(MyLibDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(MyLibs)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

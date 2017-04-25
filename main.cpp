@@ -1,38 +1,20 @@
+#include <NearTox/Base.hpp>
+
+#include <fmt/format.h>
+#include <Skia/core/SkPath.h>
 #include <iostream>
-#include <string>
+#include <cassert>
 
-typedef float SkScalar;
-
-struct SkPoint {
-
-  SkScalar fX = 0;
-  SkScalar fY = 0;
-
-  const SkScalar& x() const { return fX; }
-  const SkScalar& y() const { return fY; }
-
-  void operator+=(const SkPoint &add) {
-    fX += add.fX;
-    fY += add.fY;
+namespace NearTox {
+  std::string ToString(const SkPoint &point) {
+    return fmt::format("SkPoint::Make({}, {})", ToString(point.x()), ToString(point.y()));
   }
-
-  friend SkPoint operator+(const SkPoint &add, const SkPoint &add_2) {
-    return SkPoint::Make(add.fX + add_2.fX, add.fY + add_2.fY);
+  // alternatie
+  std::string ToString(const SkPoint &point, bool) {
+    return fmt::format("{}, {}", ToString(point.x()), ToString(point.y()));
   }
-
-  static SkPoint Make(SkScalar x, SkScalar y) {
-    SkPoint temp;
-    temp.fX = x;
-    temp.fY = y;
-    return temp;
-  }
-  std::string to_string() const {
-    return "SkPoint::Make(" +
-      std::to_string(fX) + ", " +
-      std::to_string(fY) + ")";
-  }
-};
-
+}
+using namespace NearTox;
 struct SvgPathParser {
 private:
   enum TOKEN : uint8_t {
@@ -75,6 +57,7 @@ public:
   ConstrainedSvgPathParser(SkScalar originalWidth, SkScalar originalHeight, SkScalar viewWidth,
     SkScalar viewHeight);
 };
+
 SvgPathParser::TOKEN SvgPathParser::advanceToNextToken() {
   while(mIndex < mPathString.size()) {
     char c = mPathString.at(mIndex);
@@ -157,9 +140,9 @@ std::string SvgPathParser::parsePath(const std::string &s) {
 
   SkPoint ptX, ptX1, ptX0, ptX2;
 
-  std::string p;
-  p += "SkPath p;\n";
-  p += "p.setFillType(SkPath::kWinding_FillType);\n";
+  SkPath pp;
+  std::string p = "SkPath p;\n"
+    "p.setFillType(SkPath::kWinding_FillType);\n";
 
   char lastcomand = 'z';
   while(mIndex < mPathString.size()) {
@@ -180,18 +163,20 @@ std::string SvgPathParser::parsePath(const std::string &s) {
             ptX = tempX;
           }
           if(firstPoint) {
-            p += "p.moveTo(" + std::to_string(ptX.x()) + ", " + std::to_string(ptX.y()) + ");\n";
+            pp.moveTo(ptX);
+            p += fmt::format("p.moveTo({});\n", ToString(ptX, true));
             firstPoint = false;
             ptX0 = ptX;
           } else {
-            p += "p.lineTo(" + std::to_string(ptX.x()) + ", " + std::to_string(ptX.y()) + ");\n";
+            pp.lineTo(ptX);
+            p += fmt::format("p.lineTo({});\n", ToString(ptX, true));
           }
         }
-        /*{
-        SkPoint tempPoint;
-        p.getLastPt(&tempPoint);
-        assert(tempPoint == ptX);
-        }*/
+        {
+          SkPoint tempPoint;
+          pp.getLastPt(&tempPoint);
+          assert(tempPoint == ptX);
+        }
         lastcomand = command;
         break;
       }
@@ -200,7 +185,7 @@ std::string SvgPathParser::parsePath(const std::string &s) {
       case 'a':
       {
         // rx ry x-axis-rotation large-arc-flag sweep-flag x y
-        // addArc(oval, x2, sweep-flag)
+        // arcTo(rx ry x-axis-rotation large-arc-flag sweep-flag x y)
         while(advanceToNextToken() == TOKEN_VALUE) {
           SkPoint tempR = consumeAndTransformPoint();
           SkScalar tempX_rot = consumeValue();
@@ -212,15 +197,18 @@ std::string SvgPathParser::parsePath(const std::string &s) {
           } else {
             ptX = tempX;
           }
-          p += "p.arcTo(" + tempR.to_string() + ", " + std::to_string(tempX_rot) + ", " +
-            "(SkPath::ArcSize) SkToBool(" + std::to_string(largeArc) + "), " +
-            "(SkPath::Direction) !SkToBool(" + std::to_string(sweep) + ")," + ptX.to_string() + ");\n";
+          pp.arcTo(tempR, tempX_rot, (SkPath::ArcSize) SkToBool(largeArc), (SkPath::Direction) !SkToBool(sweep), ptX);
+          p += fmt::format(
+            "p.arcTo({}, {}, (SkPath::ArcSize) SkToBool({}), (SkPath::Direction) !SkToBool({}), {});\n",
+            ToString(tempR, true), ToString(tempX_rot),
+            ToString(largeArc), ToString(sweep),
+            ToString(ptX, true));
         }
-        /*{
-        SkPoint tempPoint;
-        p.getLastPt(&tempPoint);
-        assert(tempPoint == ptX);
-        }*/
+        {
+          SkPoint tempPoint;
+          pp.getLastPt(&tempPoint);
+          assert(tempPoint == ptX);
+        }
         lastcomand = command;
         break;
       }
@@ -246,13 +234,14 @@ std::string SvgPathParser::parsePath(const std::string &s) {
             ptX2 = tempX2;
             ptX = tempX;
           }
-          p += "p.cubicTo(" + std::to_string(ptX1.x()) + ", " + std::to_string(ptX1.y()) + ", " + std::to_string(ptX2.x()) + ", " + std::to_string(ptX2.y()) + ", " + std::to_string(ptX.x()) + ", " + std::to_string(ptX.y()) + ");\n";
+          pp.cubicTo(ptX1, ptX2, ptX);
+          p += fmt::format("p.cubicTo({}, {}, {});\n", ToString(ptX1, true), ToString(ptX2, true), ToString(ptX, true));
         }
-        /*{
-        SkPoint tempPoint1;
-        p.getLastPt(&tempPoint1);
-        assert(tempPoint1 == ptX);
-        }*/
+        {
+          SkPoint tempPoint1;
+          pp.getLastPt(&tempPoint1);
+          assert(tempPoint1 == ptX);
+        }
         lastcomand = command;
         break;
       }
@@ -277,13 +266,14 @@ std::string SvgPathParser::parsePath(const std::string &s) {
             ptX = tempX;
           }
 
-          p += "p.cubicTo(" + std::to_string(ptX1.x()) + ", " + std::to_string(ptX1.y()) + ", " + std::to_string(ptX2.x()) + ", " + std::to_string(ptX2.y()) + ", " + std::to_string(ptX.x()) + ", " + std::to_string(ptX.y()) + ");\n";
+          pp.cubicTo(ptX1, ptX2, ptX);
+          p += fmt::format("p.cubicTo({}, {}, {});\n", ToString(ptX1, true), ToString(ptX2, true), ToString(ptX, true));
         }
-        /*{
-        SkPoint tempPoint1;
-        p.getLastPt(&tempPoint1);
-        assert(tempPoint1 == ptX);
-        }*/
+        {
+          SkPoint tempPoint1;
+          pp.getLastPt(&tempPoint1);
+          assert(tempPoint1 == ptX);
+        }
         lastcomand = command;
         break;
       }
@@ -306,13 +296,15 @@ std::string SvgPathParser::parsePath(const std::string &s) {
           } else {
             ptX = tempX;
           }
-          p += "p.quadTo(" + std::to_string(ptX1.x()) + ", " + std::to_string(ptX1.y()) + ", " + std::to_string(ptX.x()) + ", " + std::to_string(ptX.y()) + ");\n";
+
+          pp.quadTo(ptX1, ptX);
+          p += fmt::format("p.quadTo({}, {});\n", ToString(ptX1, true), ToString(ptX, true));
         }
-        /*{
-        SkPoint tempPoint1;
-        p.getLastPt(&tempPoint1);
-        assert(tempPoint1 == ptX);
-        }*/
+        {
+          SkPoint tempPoint1;
+          pp.getLastPt(&tempPoint1);
+          assert(tempPoint1 == ptX);
+        }
         lastcomand = command;
         break;
       }
@@ -333,13 +325,15 @@ std::string SvgPathParser::parsePath(const std::string &s) {
             ptX1 = tempX1;
             ptX = tempX;
           }
-          p += "p.quadTo(" + std::to_string(ptX1.x()) + ", " + std::to_string(ptX1.y()) + ", " + std::to_string(ptX.x()) + ", " + std::to_string(ptX.y()) + ");\n";
+
+          pp.quadTo(ptX1, ptX);
+          p += fmt::format("p.quadTo({}, {});\n", ToString(ptX1, true), ToString(ptX, true));
         }
-        /*{
-        SkPoint tempPoint1;
-        p.getLastPt(&tempPoint1);
-        assert(tempPoint1 == ptX);
-        }*/
+        {
+          SkPoint tempPoint1;
+          pp.getLastPt(&tempPoint1);
+          assert(tempPoint1 == ptX);
+        }
         lastcomand = command;
         break;
       }
@@ -354,13 +348,15 @@ std::string SvgPathParser::parsePath(const std::string &s) {
           } else {
             ptX = tempX;
           }
-          p += "p.lineTo(" + std::to_string(ptX.x()) + ", " + std::to_string(ptX.y()) + ");\n";
+
+          pp.lineTo(ptX);
+          p += fmt::format("p.lineTo({});\n", ToString(ptX, true));
         }
-        /*{
-        SkPoint tempPoint1;
-        p.getLastPt(&tempPoint1);
-        assert(tempPoint1 == ptX);
-        }*/
+        {
+          SkPoint tempPoint1;
+          pp.getLastPt(&tempPoint1);
+          assert(tempPoint1 == ptX);
+        }
         lastcomand = command;
         break;
       }
@@ -375,13 +371,14 @@ std::string SvgPathParser::parsePath(const std::string &s) {
           } else {
             ptX.fX = x;
           }
-          p += "p.lineTo(" + std::to_string(ptX.x()) + ", " + std::to_string(ptX.y()) + ");\n";
+          pp.lineTo(ptX);
+          p += fmt::format("p.lineTo({});\n", ToString(ptX, true));
         }
-        /*{
-        SkPoint tempPoint1;
-        p.getLastPt(&tempPoint1);
-        assert(tempPoint1 == ptX);
-        }*/
+        {
+          SkPoint tempPoint1;
+          pp.getLastPt(&tempPoint1);
+          assert(tempPoint1 == ptX);
+        }
         lastcomand = command;
         break;
       }
@@ -396,13 +393,14 @@ std::string SvgPathParser::parsePath(const std::string &s) {
           } else {
             ptX.fY = y;
           }
-          p += "p.lineTo(" + std::to_string(ptX.x()) + ", " + std::to_string(ptX.y()) + ");\n";
+          pp.lineTo(ptX);
+          p += fmt::format("p.lineTo({});\n", ToString(ptX, true));
         }
-        /*{
-        SkPoint tempPoint1;
-        p.getLastPt(&tempPoint1);
-        assert(tempPoint1 == ptX);
-        }*/
+        {
+          SkPoint tempPoint1;
+          pp.getLastPt(&tempPoint1);
+          assert(tempPoint1 == ptX);
+        }
         lastcomand = command;
         break;
       }
@@ -411,14 +409,16 @@ std::string SvgPathParser::parsePath(const std::string &s) {
       case 'z':
       {
         // close command
+        // the last point isn't moved to the first moveTo() so assign ptX to ptX0
+        pp.close();
         p += "p.close();\n";
         if(relative) {
           ptX = ptX0;
         }
         /*{
-        SkPoint tempPoint1;
-        p.getLastPt(&tempPoint1);
-        assert(tempPoint1 == ptX);
+          SkPoint tempPoint1;
+          pp.getLastPt(&tempPoint1);
+          assert(tempPoint1 == ptX);
         }*/
         lastcomand = command;
         break;
@@ -443,11 +443,7 @@ int main() {
     if(path_temp.size() == 0) {
       if(path.size() != 0) {
         SvgPathParser temp;
-        try {
-          result += temp.parsePath(path);
-        } catch(std::exception e) {
-          std::cerr << e.what();
-        }
+        result += temp.parsePath(path);
         path.clear();
       }
       doExit++;

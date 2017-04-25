@@ -1,4 +1,5 @@
 #include <NearTox/Base.hpp>
+#include <NearTox/Json.hpp>
 
 #include <fmt/format.h>
 #include <Skia/core/SkPath.h>
@@ -61,13 +62,13 @@ public:
 SvgPathParser::TOKEN SvgPathParser::advanceToNextToken() {
   while(mIndex < mPathString.size()) {
     char c = mPathString.at(mIndex);
-    if('a' <= c && c <= 'z') {
+    if(c >= 'a' && c <= 'z') {
       mCurrentToken = TOKEN_RELATIVE_COMMAND;
       return mCurrentToken;
-    } else if('A' <= c && c <= 'Z') {
+    } else if(c >= 'A'  && c <= 'Z') {
       mCurrentToken = TOKEN_ABSOLUTE_COMMAND;
       return mCurrentToken;
-    } else if(('0' <= c && c <= '9') || c == '.' || c == '-') {
+    } else if((c >= '0'  && c <= '9') || c == '.' || c == '-') {
       mCurrentToken = TOKEN_VALUE;
       return mCurrentToken;
     }
@@ -105,7 +106,7 @@ SkScalar SvgPathParser::consumeValue() {
   size_t index = mIndex;
   while(index < mPathString.size()) {
     char c = mPathString.at(index);
-    if(!('0' <= c && c <= '9') && (c != '.' || seenDot) && (c != '-' || !start)) {
+    if(!((c >= '0' && c <= '9') || c == '.' || c == '-') || (c == '.' && seenDot) || (c == '-' && !start)) {
       // end of value
       break;
     }
@@ -120,8 +121,16 @@ SkScalar SvgPathParser::consumeValue() {
     throw std::exception("Expected value", mIndex);
   }
 
-  std::string str = mPathString.substr(mIndex, index);
+  std::string str = mPathString.substr(mIndex, index - mIndex);
   try {
+    {
+      BasicJSON temp;
+      temp.Parse(str);
+      if(temp.isCompat(JS_Int)) {
+        mIndex = index;
+        return temp.GetDouble();
+      }
+    }
     SkScalar value = std::stof(str);
     mIndex = index;
     return value;

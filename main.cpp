@@ -1,5 +1,9 @@
-#include <iostream>
-#include <string>
+#include <NearTox/Base.hpp>
+#include <NearTox/Json.hpp>
+
+#include <fmt/format.h>
+#include <Skia/core/SkPath.h>
+#include <iostream>#include <string>
 
 typedef float SkScalar;
 
@@ -75,16 +79,17 @@ public:
   ConstrainedSvgPathParser(SkScalar originalWidth, SkScalar originalHeight, SkScalar viewWidth,
     SkScalar viewHeight);
 };
+
 SvgPathParser::TOKEN SvgPathParser::advanceToNextToken() {
   while(mIndex < mPathString.size()) {
     char c = mPathString.at(mIndex);
-    if('a' <= c && c <= 'z') {
+    if(c >= 'a' && c <= 'z') {
       mCurrentToken = TOKEN_RELATIVE_COMMAND;
       return mCurrentToken;
-    } else if('A' <= c && c <= 'Z') {
+    } else if(c >= 'A'  && c <= 'Z') {
       mCurrentToken = TOKEN_ABSOLUTE_COMMAND;
       return mCurrentToken;
-    } else if(('0' <= c && c <= '9') || c == '.' || c == '-') {
+    } else if((c >= '0'  && c <= '9') || c == '.' || c == '-') {
       mCurrentToken = TOKEN_VALUE;
       return mCurrentToken;
     }
@@ -122,7 +127,7 @@ SkScalar SvgPathParser::consumeValue() {
   size_t index = mIndex;
   while(index < mPathString.size()) {
     char c = mPathString.at(index);
-    if(!('0' <= c && c <= '9') && (c != '.' || seenDot) && (c != '-' || !start)) {
+    if(!((c >= '0' && c <= '9') || c == '.' || c == '-') || (c == '.' && seenDot) || (c == '-' && !start)) {
       // end of value
       break;
     }
@@ -137,7 +142,7 @@ SkScalar SvgPathParser::consumeValue() {
     throw std::exception("Expected value", mIndex);
   }
 
-  std::string str = mPathString.substr(mIndex, index);
+  std::string str = mPathString.substr(mIndex, index - mIndex);
   try {
     SkScalar value = std::stof(str);
     mIndex = index;
@@ -157,9 +162,8 @@ std::string SvgPathParser::parsePath(const std::string &s) {
 
   SkPoint ptX, ptX1, ptX0, ptX2;
 
-  std::string p;
-  p += "SkPath p;\n";
-  p += "p.setFillType(SkPath::kWinding_FillType);\n";
+  std::string p = "SkPath p;\n"
+    "p.setFillType(SkPath::kWinding_FillType);\n";
 
   char lastcomand = 'z';
   while(mIndex < mPathString.size()) {

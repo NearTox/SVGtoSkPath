@@ -1,0 +1,13 @@
+BasedOnStyle: Google
+ColumnLimit: 100
+DerivePointerAlignment: true
+PointerAlignment: Right
+SpaceAfterTemplateKeyword: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+BreakBeforeInheritanceComma: true
+AllowShortBlocksOnASingleLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AlignAfterOpenBracket: AlwaysBreak
+BreakConstructorInitializers: AfterColon
+AlwaysBreakBeforeMultilineStrings: false
+IndentPPDirectives: AfterHash
